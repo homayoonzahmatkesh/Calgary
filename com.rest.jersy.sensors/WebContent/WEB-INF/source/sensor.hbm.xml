@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<hibernate-mapping>
+    <class name="com.rest.jersey.sensors.sensorObject" table="sensor">
+        
+        <id name="sensor_id" type="string">
+            <column name="sensor_id" length="100" not-null="true" />
+            <generator class="assigned" />
+        </id>
+        
+        <property name="Direction" type="float">
+            <column name="Direction"  not-null="true" />
+        </property>
+        
+        <property name="observed_value" type="float">
+            <column name="observed_value" not-null="true" />
+        </property>
+        
+        <property name="actual_position" type="org.hibernate.spatial.GeometryType">
+            <column name="actual_position" not-null="true" />
+        </property>
+        
+    </class>
+</hibernate-mapping>

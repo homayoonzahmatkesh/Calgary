@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style type="text/css">
+      html, body, #map-canvas { height: 100%; margin: 0; padding: 0;}
+    </style>
+    <script type="text/javascript"
+      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAeZpFv-uASx1hzFOci8fRmWP82frmPeK4">
+    </script>
+    <script src="//code.jquery.com/jquery-1.11.2.min.js"></script>
+    <script src="//code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
+    <script type="text/javascript">
+
+    var allMarkers = [];
+    var alltrack=[];
+    var map;
+    var openedInfoWindow = null;
+    
+    
+      function initialize() {
+    	  
+        var mapOptions = {
+          center: { lat: 51.0279174, lng: -114.037261},
+          zoom: 11
+        };
+      
+       map = new google.maps.Map(document.getElementById('map-canvas'),mapOptions);
+       var homeControlDiv = document.createElement('div');
+       var homeControl = new HomeControl(homeControlDiv, map);
+
+       homeControlDiv.index = 1;
+       map.controls[google.maps.ControlPosition.TOP_CENTER].push(homeControlDiv);
+
+       
+      }
+  
+
+      function HomeControl(controlDiv, map) {
+
+    	  // Set CSS styles for the DIV containing the control
+    	  // Setting padding to 5 px will offset the control
+    	  // from the edge of the map.
+    	  controlDiv.style.padding = '5px';
+
+    	  // Set CSS for the control border.
+    	  var controlUI = document.createElement('div');
+    	  controlUI.style.backgroundColor = 'white';
+    	  controlUI.style.borderStyle = 'solid';
+    	  controlUI.style.borderWidth = '2px';
+    	  controlUI.style.cursor = 'pointer';
+    	  controlUI.style.textAlign = 'center';
+    	  controlUI.title = 'Click to Show Sensors';
+    	  controlDiv.appendChild(controlUI);
+
+    	  // Set CSS for the control interior.
+    	  var controlText = document.createElement('div');
+    	  controlText.style.fontFamily = 'Arial,sans-serif';
+    	  controlText.style.fontSize = '12px';
+    	  controlText.style.paddingLeft = '4px';
+    	  controlText.style.paddingRight = '4px';
+    	  controlText.innerHTML = '<strong>SHOW Sensors</strong>';
+    	  controlUI.appendChild(controlText);
+
+    	  // Setup the click event listeners: simply set the map to Chicago.
+    	  google.maps.event.addDomListener(controlUI, 'click', function() {
+
+           var jqxhr = $.getJSON( "http://localhost:8080/com.rest.sensors/rest/sensors/getJson", function(data) {
+
+           	})
+           	.done(function(data) {
+           		$.each(data, function (key, rec) {
+           			var lat = parseFloat(rec.Lat);
+                       var lng = parseFloat(rec.Lon);
+                       var tmp = parseFloat(rec.Lon);
+           		 var marker = new google.maps.Marker({
+           	            position: new google.maps.LatLng(lat,lng),
+           	            map: map,
+           	         animation: google.maps.Animation.DROP,
+           	            title: "This is the sensor "+ rec.ID +".The location of sensor is at ("+rec.lat+","+rec.lon+") and the observed temprature is  "+rec.Temprature+" degrees"  
+           	            
+           	        });
+           		 
+           		 var infowindow = new google.maps.InfoWindow({
+          		      content: marker.title
+          		  });
+          		 
+          		  google.maps.event.addListener(marker, 'click', function() {
+          			if (openedInfoWindow != null) openedInfoWindow.close();
+          			    infowindow.open(map,marker);
+          			  });
+
+           		 
+           		 allMarkers.push(marker);
+           		 
+           		 alltrack.push( new google.maps.Polyline({
+           			 map:map,
+           	            strokeColor: '#FF0000',
+           	            strokeOpacity: 1.0,
+           	            strokeWeight: 1
+           	                }) );
+           		});
+           	})
+           	.fail(function() {
+           	console.log( "error" );
+           	})
+           	.always(function() {
+           	console.log( "complete" );
+           	});
+           
+       
+         
+             
+         setInterval(function () {
+       	  var jqxhr = $.getJSON( "http://localhost:8080/com.rest.sensors/rest/sensors/getJson", function(data) {
+   	        	
+         	})
+         	.done(function(data) {
+         		$.each(data, function (key, rec) {
+         			var lat = parseFloat(rec.Lat);
+                   var lng = parseFloat(rec.Lon);
+                     allMarkers[key].setPosition(new google.maps.LatLng(lat, lng));
+                     allMarkers[key].setTitle("This is the sensor "+ rec.ID+". The location of sensor is at ("+rec.lat+","+rec.lon+") and the observed temprature is  "+rec.Temprature+"  degrees")
+                     var map=allMarkers[key].getMap();
+                     
+                     var infowindow = new google.maps.InfoWindow({
+           		      content: allMarkers[key].title
+           		  });
+           		 
+           		  google.maps.event.addListener(allMarkers[key], 'click', function() {
+           			if (openedInfoWindow != null) openedInfoWindow.close();
+           			infowindow.open(map,allMarkers[key]);
+           			  });
+           		  
+           		  
+                     var path = alltrack[key].getPath();
+                     if(path.length >150)
+                   	  {
+                   	  for (i = 0; i < 50; i++) { 
+                   	  	path.removeAt(i);
+                   	  	}
+                   	  }
+                     path.push(new google.maps.LatLng(lat, lng));
+                     alltrack[key].setPath(path);
+         		 
+         		});
+         		
+         		
+
+         		
+         		
+         	})
+         	.fail(function() {
+         	console.log( "error" );
+         	})
+         	.always(function() {
+         	console.log( "complete" );
+         	});
+       	  
+         }, 3000);
+         
+         
+         
+    	  });
+    	}
+      
+
+      
+      
+      google.maps.event.addDomListener(window, 'load', initialize);
+
+      
+      
+      
+      
+      
+      
+    </script>
+  </head>
+  <body>
+<div id="map-canvas"></div>
+<div id="map-canvas"></div>
+ 
+  </body>
+</html>
